@@ -15,6 +15,10 @@ document.addEventListener('DOMContentLoaded', () => {
     let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
     let currentFilter = 'all';
 
+    // ... logo após a linha let currentFilter = 'all';
+
+  // Variável para o som do alarme. Usamos um link direto para um arquivo MP3.
+  const alarmSound = new Audio('https://www.soundjay.com/buttons/sounds/beep-07a.mp3');
     // --- FUNÇÕES DE LÓGICA ---
 
     /**
@@ -205,5 +209,51 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- INICIALIZAÇÃO ---
     // Renderiza as tarefas pela primeira vez quando a página carrega
+    // ... adicione este código antes da linha final });
+
+    /**
+     * Verifica a hora atual e dispara um alarme para tarefas pendentes correspondentes.
+     */
+    const checkAlarms = () => {
+        const now = new Date();
+        // Formata a hora atual para o formato HH:MM (ex: 14:30)
+        const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+
+        // Percorre todas as tarefas para verificar
+        tasks.forEach(task => {
+            // A chave de verificação usa o ID da tarefa e a data atual
+            // para garantir que o alarme toque apenas uma vez por dia para cada tarefa.
+            const notificationKey = `notified_${task.id}_${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`;
+
+            // CONDIÇÕES PARA O ALARME TOCAR:
+            // 1. A tarefa não pode estar concluída.
+            // 2. O horário da tarefa deve ser igual ao horário atual.
+            // 3. O alarme para esta tarefa ainda não pode ter tocado hoje (verificando no sessionStorage).
+            if (!task.completed && task.time === currentTime && !sessionStorage.getItem(notificationKey)) {
+                
+                console.log(`Disparando alarme para: ${task.name}`);
+
+                // Tenta tocar o som
+                alarmSound.play().catch(error => {
+                    console.error("Não foi possível tocar o som do alarme:", error);
+                    // Mesmo que o som falhe (alguns navegadores bloqueiam), o alerta visual ainda funciona.
+                });
+
+                // Mostra um alerta na tela
+                alert(`Hora da Tarefa!\n\n${task.name}`);
+
+                // Marca no sessionStorage que este alarme já tocou hoje.
+                // Usamos sessionStorage para que a marcação seja esquecida se o navegador for fechado,
+                // permitindo que o alarme toque novamente no dia seguinte.
+                sessionStorage.setItem(notificationKey, 'true');
+            }
+        });
+    };
+
+    // ... logo após a função checkAlarms
+
+    // Inicia o verificador de alarmes para rodar a cada 10 segundos.
+    setInterval(checkAlarms, 10000); // 10000 milissegundos = 10 segundos
+    
     renderTasks();
 });
