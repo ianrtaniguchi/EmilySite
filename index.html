@@ -1,97 +1,61 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <title>Minha Rotina</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="manifest" href="manifest.json">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <link rel="apple-touch-icon" href="icone.png">
-  <style>
-    body { font-family: sans-serif; padding: 10px; background: #f5f5f5; }
-    h1 { text-align: center; }
-    input, button { font-size: 1.2em; margin: 5px 0; padding: 5px; }
-    .task { display: flex; justify-content: space-between; align-items: center; margin: 5px 0; background: #fff; padding: 10px; border-radius: 8px; }
-    .done { text-decoration: line-through; color: gray; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minhas Tarefas</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>Minha Rotina</h1>
-  <input type="text" id="taskInput" placeholder="Nova tarefa">
-  <input type="time" id="taskTime">
-  <button onclick="addTask()">Adicionar</button>
-  <div id="tasks"></div>
 
-  <script>
-    // Permissão de notificações
-    if (Notification.permission !== 'granted') {
-      Notification.requestPermission();
-    }
+    <div class="container">
+        <header>
+            <h1>Minhas Tarefas</h1>
+            <button id="addTaskBtn" class="btn-primary">+ Adicionar Tarefa</button>
+        </header>
 
-    // Carregar tarefas do localStorage
-    let tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
-    tasks.forEach(t => displayTask(t));
+        <nav class="filters">
+            <button class="filter-btn active" data-filter="all">Todas</button>
+            <button class="filter-btn" data-filter="pending">Pendentes</button>
+            <button class="filter-btn" data-filter="completed">Concluídas</button>
+            <button class="filter-btn" data-filter="favorites">Favoritas</button>
+        </nav>
 
-    // Adicionar tarefa
-    function addTask() {
-      const taskText = document.getElementById('taskInput').value.trim();
-      const taskTime = document.getElementById('taskTime').value;
-      if(!taskText || !taskTime) return alert("Preencha todos os campos");
+        <main>
+            <ul id="task-list">
+                </ul>
+        </main>
+    </div>
 
-      const task = { text: taskText, time: taskTime, done: false };
-      tasks.push(task);
-      localStorage.setItem('tasks', JSON.stringify(tasks));
-      displayTask(task);
-
-      document.getElementById('taskInput').value = '';
-      document.getElementById('taskTime').value = '';
-    }
-
-    // Mostrar tarefa na tela
-    function displayTask(task) {
-      const taskDiv = document.createElement('div');
-      taskDiv.className = 'task';
-      if(task.done) taskDiv.classList.add('done');
-      taskDiv.innerHTML = `
-        <span>${task.time} - ${task.text}</span>
-        <div>
-          <button onclick="toggleDone('${task.text}', '${task.time}', this)">✓</button>
-          <button onclick="removeTask('${task.text}', '${task.time}', this)">X</button>
+    <div id="taskModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn">&times;</span>
+            <h2 id="modalTitle">Adicionar Tarefa</h2>
+            <form id="taskForm">
+                <input type="hidden" id="taskId">
+                <div class="form-group">
+                    <label for="taskName">Nome da Tarefa:</label>
+                    <input type="text" id="taskName" required>
+                </div>
+                <div class="form-group">
+                    <label for="taskTime">Horário:</label>
+                    <input type="time" id="taskTime" required>
+                </div>
+                <div class="form-group">
+                    <label for="taskFrequency">Frequência:</label>
+                    <select id="taskFrequency">
+                        <option value="Diário">Diário</option>
+                        <option value="Semanal">Semanal</option>
+                        <option value="Mensal">Mensal</option>
+                        <option value="Único">Único</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn-primary">Salvar</button>
+            </form>
         </div>
-      `;
-      document.getElementById('tasks').appendChild(taskDiv);
-    }
-
-    // Marcar como concluída
-    function toggleDone(text, time, btn) {
-      tasks = tasks.map(t => {
-        if(t.text === text && t.time === time) t.done = !t.done;
-        return t;
-      });
-      localStorage.setItem('tasks', JSON.stringify(tasks));
-      btn.parentElement.parentElement.classList.toggle('done');
-    }
-
-    // Remover tarefa
-    function removeTask(text, time, btn) {
-      tasks = tasks.filter(t => !(t.text === text && t.time === time));
-      localStorage.setItem('tasks', JSON.stringify(tasks));
-      btn.parentElement.parentElement.remove();
-    }
-
-    // Checar tarefas a cada minuto
-    setInterval(() => {
-      const now = new Date();
-      const timeStr = now.toTimeString().slice(0,5);
-      tasks.forEach(t => {
-        if(t.time === timeStr && !t.notified) {
-          new Notification('Hora da tarefa!', { body: t.text });
-          t.notified = true;
-        }
-      });
-      localStorage.setItem('tasks', JSON.stringify(tasks));
-    }, 60000);
-  </script>
+    </div>
+    
+    <script src="script.js"></script>
 </body>
 </html>
